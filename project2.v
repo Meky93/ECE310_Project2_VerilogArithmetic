@@ -1,26 +1,24 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
+// Company: NCSU
+// Engineer: Jake Lewis
 // 
-// Create Date: 10/16/2026 12:14:18 PM
-// Design Name: 
+// Create Date: 10/12/2026 11:14:18 PM
+// Design Name: project2
 // Module Name: project2
-// Project Name: 
+// Project Name: project2
 // Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
+// Tool Versions: Vivado 2026.1
+// Description: A small system that accepts 8-bit 2's complement signed numbers 
+//              as inputs,performs the operation (𝐴 − 𝐵) + (𝐶 − 𝐷), and provides the result as an output.// 
+// Dependencies: // 
 // Revision:
 // Revision 0.01 - File Created
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-
-
+// Top level module
 module Project2(
 
     // Input d_in has packed dimensions [7:0} therefore [7:0] preceeds the variable name.
@@ -71,6 +69,7 @@ wire Ain, Bin, Cin, Din;
 
 endmodule
 
+// Controller module - mostly keeps track of what has been seen or not etc and handles the 'valid' signal.
 module controller(  input clock,
                     input reset_n,
                     input [1:0] op,
@@ -82,7 +81,7 @@ module controller(  input clock,
                     output valid
 );
 
-wire givenA, givenB, givenC, givenD, newGivenA, newGivenB, newGivenC, newGivenD, newValid;            // indicates when all inputs have been recieved.
+wire givenA, givenB, givenC, givenD, newGivenA, newGivenB, newGivenC, newGivenD, newValid, done, nextDone, allGiven;            // indicates when all inputs have been recieved.
 
     // Sets signal high indicating capture = 1 and op = corresponding input
     assign Ain = (op == 2'b00) && capture;
@@ -94,8 +93,14 @@ wire givenA, givenB, givenC, givenD, newGivenA, newGivenB, newGivenC, newGivenD,
     assign newGivenB = givenB | Bin;
     assign newGivenC = givenC | Cin;
     assign newGivenD = givenD | Din;
-    
-    assign newValid = givenA && givenB && givenC && givenD && ~valid;
+   
+    assign allGiven = givenA && givenB && givenC && givenD;
+
+    // Produce one valid pulse after all four operands are stored.
+    assign newValid = allGiven && ~done;
+
+    // Prevent valid from repeating every other clock.
+    assign nextDone = done | allGiven;
     
     // signal/flag registers  
     dff1bit valid_signal(
@@ -132,9 +137,17 @@ wire givenA, givenB, givenC, givenD, newGivenA, newGivenB, newGivenC, newGivenD,
         .D(newGivenD),
         .Q(givenD)
      );
+     
+     dff1bit doneregister(
+    .Clk(clock),
+    .reset_n(reset_n),
+    .D(nextDone),
+    .Q(done)
+);
 
 endmodule
 
+// datapath module - performs the arithmetic and handles register memory and the result.
 module datapath(
 input clock,
                 input reset_n,
@@ -165,7 +178,7 @@ wire signed [9:0] notB;
 wire signed [9:0] notD;
 wire signed [9:0] AminusB;
 wire signed [9:0] CminusD;
-wire newValid;
+wire signed [9:0] calculation;
 
 // not super important
 wire notBcarry, notDcarry, sub1overflow, sub2overflow, resultoverflow;
@@ -186,7 +199,7 @@ wire notBcarry, notDcarry, sub1overflow, sub2overflow, resultoverflow;
     // coonvert B to -B (negate and add 1 for n2's complement)
     ksa_10bit_adder negateB(
             .A(~B),
-            .B(1'b1),
+            .B(10'd1),
             .S(notB),
             .Cout(notBcarry)
     );   
@@ -194,7 +207,7 @@ wire notBcarry, notDcarry, sub1overflow, sub2overflow, resultoverflow;
     // convert D to -D (negate and add 1 for 2's complement)
     ksa_10bit_adder negateD(
             .A(~D),
-            .B(1'b1),
+            .B(10'd1),
             .S(notD),
             .Cout(notDcarry)
     );    
@@ -219,7 +232,7 @@ wire notBcarry, notDcarry, sub1overflow, sub2overflow, resultoverflow;
     ksa_10bit_adder letsAdd(
             .A(AminusB),
             .B(CminusD),
-            .S(result),
+            .S(calculation),
             .Cout(resultoverflow)
     );  
     
@@ -251,6 +264,14 @@ wire notBcarry, notDcarry, sub1overflow, sub2overflow, resultoverflow;
         .D(futureD),
         .Q(regD)
     );
+
+    dff10bit registerresult(
+        .Clk(clock),
+        .reset_n(reset_n),    
+        .D(calculation),
+        .Q(result)
+    );
+    
 endmodule
 
 module ksa_10bit_adder(input [9:0] A,
@@ -518,7 +539,19 @@ module dff1bit(output reg Q,
         
 endmodule
 
+module dff10bit(output reg  [9:0] Q,
+               input [9:0] D,
+               input Clk, reset_n
+);
 
+    always @(posedge Clk) begin
+        if (!reset_n)
+            Q <= 10'b0;
+        else
+            Q <= D;
+    end
+        
+endmodule
 
 
 
