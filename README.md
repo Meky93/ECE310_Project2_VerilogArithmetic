@@ -1,3 +1,25 @@
+---
+abstract: |
+  This project consisted of designing and implementing a synchronous
+  system that computes $(A - B) + (C - D)$, where A, B, C, and D are
+  signed 8-bit 2's complement numbers. The inputs are given to the
+  system through a single input port and a 2 bit operand used to select
+  which input is currently selected to be stored in an internal
+  register. The design consists of a controller and datapath sections.
+  The data path portion stores the four operands and perform the
+  arithmetic using structural 10 bit Kogge-Stone Adders. The controller
+  portion decodes the input selector, keeps track of which have already
+  been recieved, and sets the out 'valid' high when the result is
+  available. The final design was tested with continous, discontinuous,
+  and paused input sequences and successfully passed each test.
+author:
+- Jake Lewis
+date: October 18, 2026
+title: |
+  ECE 310\
+  Project 2 Report\
+---
+
 # Introduction
 
 This design consists of a synchronous digital system that takes in four
@@ -102,7 +124,6 @@ to satisfy the original expression.
 
 ## Overall Architecture
 
-::: {#tab:results}
   ----------- ------------- --------------------------------
   $Signal$    $Direction$   $Description$
   `reset_n`   `input`       `Active-low synchronous reset`
@@ -114,8 +135,7 @@ to satisfy the original expression.
   `valid`     `output`      `1-bit valid indicator`
   ----------- ------------- --------------------------------
 
-  : Top-Level Ports
-:::
+  : Top-Level Ports {#tab:results}
 
 The design was implemented using three main modules: Project2,
 controller, and datapath. The top-level module, Project2, connects the
@@ -126,7 +146,7 @@ and performs the required arithmetic. Figure 1 shows the overall flow of
 the system.
 
 <figure id="fig:proj2design" data-latex-placement="htbp">
-<img src="./flow.jpg" style="width:25.0%" />
+<img src="flow.jpg" style="width:25.0%" />
 <figcaption>Architecture Overview</figcaption>
 </figure>
 
@@ -151,7 +171,6 @@ The controller decodes the op and capture inputs using continuous
 assignments. The load signals are generated according to the mapping in
 Table 2.
 
-::: {#tab:results}
   ------ ----------- ---------------
   $op$   $Operand$   $Load Signal$
   `00`   `A`         `Ain`
@@ -160,8 +179,7 @@ Table 2.
   `11`   `D`         `Din`
   ------ ----------- ---------------
 
-  : Top-Level Ports
-:::
+  : Top-Level Ports {#tab:results}
 
 A load signal is asserted only when capture is high. For example, the
 signal operand A is the same as $Ain = catpure AND (op ==00)$. The
@@ -236,7 +254,7 @@ is low at a rising edge of the clock. When 'reset_n' is high, the flip
 flops store their corresponding data inputs on each rising clock edge.
 
 <figure id="fig:Dflipflop" data-latex-placement="htbp">
-<img src="./dflip.jpg" style="width:75.0%" />
+<img src="dflip.jpg" style="width:75.0%" />
 <figcaption>D Flip Flop</figcaption>
 </figure>
 
@@ -276,7 +294,7 @@ With an expected result of 510. A comprehensive testbench was created in
 order to show the waveform of the results as seen in figure 4.
 
 <figure id="fig:Waveform of Results" data-latex-placement="htbp">
-<img src="./wave.jpg" style="width:100.0%" />
+<img src="wave.jpg" style="width:100.0%" />
 <figcaption>Waveform of Results</figcaption>
 </figure>
 
@@ -291,18 +309,18 @@ top level module while figures 6 and 7 represent the controller and
 datapth modules respectively.
 
 <figure id="fig:Top Level Module Schematic" data-latex-placement="htbp">
-<img src="./toplevel.jpg" style="width:100.0%" />
+<img src="toplevel.jpg" style="width:100.0%" />
 <figcaption>Top Level Module Schematic</figcaption>
 </figure>
 
 <figure id="fig:Controller Module Schematic"
 data-latex-placement="htbp">
-<img src="./controller.jpg" style="width:100.0%" />
+<img src="controller.jpg" style="width:100.0%" />
 <figcaption>Controller Module Schematic</figcaption>
 </figure>
 
 <figure id="fig:Datapath Module Schematic" data-latex-placement="htbp">
-<img src="./datapath.jpg" style="width:100.0%" />
+<img src="datapath.jpg" style="width:100.0%" />
 <figcaption>Datapath Module Schematic</figcaption>
 </figure>
 
